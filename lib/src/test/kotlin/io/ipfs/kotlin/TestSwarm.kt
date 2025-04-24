@@ -68,6 +68,7 @@ class TestSwarm : BaseIPFSWebserverTest() {
         assertThat(swarmPeersResult).isNotNull()
         assertThat(swarmPeersResult).isInstanceOf(SwarmPeersResult.Success::class.java)
         assertThat((swarmPeersResult as SwarmPeersResult.Success).peers).isNotNull()
+        assertThat((swarmPeersResult).peers.peers?.size).isEqualTo(29)
         assertThat((swarmPeersResult).peers.peers!![0].addr).isEqualTo("/ip4/104.156.227.102/tcp/4001")
 
         assertThat(ipfs.lastError).isNull()

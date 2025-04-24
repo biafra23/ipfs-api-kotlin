@@ -35,7 +35,9 @@ class Swarm(val ipfs: IPFSConnection) {
         val httpResponse = ipfs.executeCmd("swarm/peers")
         if (httpResponse.isSuccessful) {
             val result = swarmPeersAdapter.fromJson(httpResponse.body()!!.use {
-                it.string()
+                val result = it.string()
+                println("swarm/peers: $result")
+                result
             })
             return SwarmPeersResult.Success(result)
         } else {
