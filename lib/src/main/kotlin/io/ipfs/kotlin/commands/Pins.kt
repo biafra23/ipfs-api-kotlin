@@ -7,8 +7,8 @@ import io.ipfs.kotlin.IPFSConnection
 
 class Pins(val ipfs: IPFSConnection) {
 
-    private val pinsAdapter: JsonAdapter<PinLsResult> by lazy {
-        ipfs.config.moshi.adapter(PinLsResult::class.java)
+    private val pinsAdapter: JsonAdapter<PinLsList> by lazy {
+        ipfs.config.moshi.adapter(PinLsList::class.java)
     }
 
     fun add(hash: String): Boolean {
@@ -20,33 +20,25 @@ class Pins(val ipfs: IPFSConnection) {
         return resultBoolean
     }
 
-    fun ls(): PinLsResultResult {
+    fun ls(): PinLsListResult {
         val httpResponse = ipfs.executeCmd("pin/ls")
 
         if (httpResponse.isSuccessful) {
             val result = pinsAdapter.fromJson(httpResponse.body()!!.use {
                 it.string()
             })
-            return PinLsResultResult.Success(result!!)
+            return PinLsListResult.Success(result!!)
         } else {
             ipfs.setErrorByJSON(httpResponse.body()!!.use { it.string() })
-            return PinLsResultResult.Failure(ipfs.lastError?.Message ?: "Unknown error")
+            return PinLsListResult.Failure(ipfs.lastError?.Message ?: "Unknown error")
         }
     }
 }
 
-sealed class PinLsResultResult {
-    data class Success(val pinLsResult: PinLsResult) : PinLsResultResult()
-    data class Failure(val errorMessage: String) : PinLsResultResult()
+sealed class PinLsListResult {
+    data class Success(val pinLsList: PinLsList) : PinLsListResult()
+    data class Failure(val errorMessage: String) : PinLsListResult()
 }
-
-@JsonClass(generateAdapter = true)
-data class PinLsResult(
-    @Json(name = "PinLsList")
-    val pinLsList: PinLsList? = null,
-    @Json(name = "PinLsObject")
-    val pinLsObject: PinLsObject? = null
-)
 
 @JsonClass(generateAdapter = true)
 data class PinLsList(
@@ -56,16 +48,6 @@ data class PinLsList(
 
 @JsonClass(generateAdapter = true)
 data class PinDetails(
-    @Json(name = "Name")
-    val name: String? = null,
-    @Json(name = "Type")
-    val type: String? = null
-)
-
-@JsonClass(generateAdapter = true)
-data class PinLsObject(
-    @Json(name = "Cid")
-    val cid: String? = null,
     @Json(name = "Name")
     val name: String? = null,
     @Json(name = "Type")
