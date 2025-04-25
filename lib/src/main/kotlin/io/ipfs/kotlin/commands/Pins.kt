@@ -13,4 +13,12 @@ class Pins(val ipfs: IPFSConnection) {
         return resultBoolean
     }
 
+    fun ls(): Boolean {
+        val resultString = ipfs.callCmd("pin/ls").use { it.string() }
+        val resultBoolean = resultString.isNotEmpty()
+        if (!resultBoolean) {
+            ipfs.setErrorByJSON(resultString)
+        }
+        return resultBoolean
+    }
 }
