@@ -2,17 +2,19 @@ package io.ipfs.kotlin.commands
 
 import com.squareup.moshi.JsonAdapter
 import io.ipfs.kotlin.IPFSConnection
+import io.ipfs.kotlin.model.AddrsMap
 import io.ipfs.kotlin.model.Strings
 import io.ipfs.kotlin.model.SwarmPeers
 
 class Swarm(val ipfs: IPFSConnection) {
-
     private val stringsAdapter: JsonAdapter<Strings> by lazy {
         ipfs.config.moshi.adapter(Strings::class.java)
     }
-
     private val swarmPeersAdapter: JsonAdapter<SwarmPeers> by lazy {
         ipfs.config.moshi.adapter(SwarmPeers::class.java)
+    }
+    private val addrsAdapter: JsonAdapter<AddrsMap> by lazy {
+        ipfs.config.moshi.adapter(AddrsMap::class.java)
     }
 
     fun connect(address: String): StringsResult {
@@ -30,7 +32,6 @@ class Swarm(val ipfs: IPFSConnection) {
         }
     }
 
-
     fun peers(): SwarmPeersResult {
         val httpResponse = ipfs.executeCmd("swarm/peers")
         if (httpResponse.isSuccessful) {
@@ -45,6 +46,21 @@ class Swarm(val ipfs: IPFSConnection) {
             return SwarmPeersResult.Failure(ipfs.lastError?.Message ?: "Unknown error")
         }
     }
+
+    // List known addresses. Useful for debugging.
+    fun addrs(): SwarmAddrsResult {
+        val httpResponse = ipfs.executeCmd("swarm/addrs")
+
+        if (httpResponse.isSuccessful) {
+            val result = addrsAdapter.fromJson(httpResponse.body()!!.use {
+                it.string()
+            })
+            return SwarmAddrsResult.Success(result!!)
+        } else {
+            ipfs.setErrorByJSON(httpResponse.body()!!.use { it.string() })
+            return SwarmAddrsResult.Failure(ipfs.lastError?.Message ?: "Unknown error")
+        }
+    }
 }
 
 sealed class StringsResult {
@@ -55,4 +71,9 @@ sealed class StringsResult {
 sealed class SwarmPeersResult {
     data class Success(val peers: SwarmPeers) : SwarmPeersResult()
     data class Failure(val errorMessage: String) : SwarmPeersResult()
+}
+
+sealed class SwarmAddrsResult {
+    data class Success(val addrsMap: AddrsMap) : SwarmAddrsResult()
+    data class Failure(val errorMessage: String) : SwarmAddrsResult()
 }

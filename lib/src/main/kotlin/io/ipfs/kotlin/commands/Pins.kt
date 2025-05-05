@@ -1,9 +1,9 @@
 package io.ipfs.kotlin.commands
 
-import com.squareup.moshi.Json
 import com.squareup.moshi.JsonAdapter
-import com.squareup.moshi.JsonClass
 import io.ipfs.kotlin.IPFSConnection
+import io.ipfs.kotlin.model.AddrsMap
+import io.ipfs.kotlin.model.PinLsList
 
 class Pins(val ipfs: IPFSConnection) {
 
@@ -33,23 +33,10 @@ class Pins(val ipfs: IPFSConnection) {
             return PinLsListResult.Failure(ipfs.lastError?.Message ?: "Unknown error")
         }
     }
+
 }
 
 sealed class PinLsListResult {
     data class Success(val pinLsList: PinLsList) : PinLsListResult()
     data class Failure(val errorMessage: String) : PinLsListResult()
 }
-
-@JsonClass(generateAdapter = true)
-data class PinLsList(
-    @Json(name = "Keys")
-    val keys: Map<String, PinDetails>? = null
-)
-
-@JsonClass(generateAdapter = true)
-data class PinDetails(
-    @Json(name = "Name")
-    val name: String? = null,
-    @Json(name = "Type")
-    val type: String? = null
-)
