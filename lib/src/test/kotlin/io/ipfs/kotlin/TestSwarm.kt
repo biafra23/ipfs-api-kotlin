@@ -6,8 +6,6 @@ import io.ipfs.kotlin.commands.SwarmPeersResult
 import io.ipfs.kotlin.model.Strings
 import okhttp3.mockwebserver.MockResponse
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.Ignore
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 
 class TestSwarm : BaseIPFSWebserverTest() {
@@ -30,6 +28,26 @@ class TestSwarm : BaseIPFSWebserverTest() {
 
         val executedRequest = server.takeRequest()
         assertThat(executedRequest.path).isEqualTo("/swarm/connect?arg=valid-address")
+    }
+
+    @Test
+    fun testSwarmDisconnect() {
+        // setup
+        server.enqueue(
+            MockResponse().setBody("""{"Strings":["success message"]}""").setResponseCode(200)
+        )
+
+        // invoke
+        val connected = ipfs.swarm.disconnect("valid-address-with-id")
+
+        // assert
+        assertThat(connected).isNotNull()
+        assertThat(connected).isEqualTo(StringsResult.Success(Strings(listOf("success message"))))
+
+        assertThat(ipfs.lastError).isNull()
+
+        val executedRequest = server.takeRequest()
+        assertThat(executedRequest.path).isEqualTo("/swarm/disconnect?arg=valid-address-with-id")
     }
 
     @Test
@@ -102,7 +120,7 @@ class TestSwarm : BaseIPFSWebserverTest() {
         assertThat(ipfs.lastError).isNull()
 
         val executedRequest = server.takeRequest()
-        assertThat(executedRequest.path).isEqualTo("/swarm/peers")
+        assertThat(executedRequest.path).isEqualTo("/swarm/peers?verbose=false&streams=false&latency=false&direction=false&identify=false")
     }
 
     @Test
@@ -141,5 +159,63 @@ class TestSwarm : BaseIPFSWebserverTest() {
 
         val executedRequest = server.takeRequest()
         assertThat(executedRequest.path).isEqualTo("/swarm/addrs")
+    }
+
+    @Test
+    fun testSwarmAddrsListen() {
+        // setup
+        server.enqueue(
+            MockResponse().setBody("""{"Strings":["string1", "string2"]}""").setResponseCode(200)
+        )
+
+        // invoke
+        val connected = ipfs.swarm.addrsListen(false)
+
+        // assert
+        assertThat(connected).isNotNull()
+        assertThat(connected).isEqualTo(
+            StringsResult.Success(
+                Strings(
+                    listOf(
+                        "string1",
+                        "string2"
+                    )
+                )
+            )
+        )
+
+        assertThat(ipfs.lastError).isNull()
+
+        val executedRequest = server.takeRequest()
+        assertThat(executedRequest.path).isEqualTo("/swarm/addrs/listen?showId=false")
+    }
+
+    @Test
+    fun testSwarmAddrsLocal() {
+        // setup
+        server.enqueue(
+            MockResponse().setBody("""{"Strings":["string1", "string2"]}""").setResponseCode(200)
+        )
+
+        // invoke
+        val connected = ipfs.swarm.addrsLocal(true)
+
+        // assert
+        assertThat(connected).isNotNull()
+        assertThat(connected).isEqualTo(
+            StringsResult.Success(
+                Strings(
+                    listOf(
+                        "string1",
+                        "string2"
+                    )
+                )
+            )
+        )
+
+        assertThat(ipfs.lastError).isNull()
+
+        val executedRequest = server.takeRequest()
+        assertThat(executedRequest.path).isEqualTo("/swarm/addrs/local?showId=true")
     }
 }
